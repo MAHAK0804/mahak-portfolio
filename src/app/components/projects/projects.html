@@ -1,0 +1,25 @@
+<section id="projects" class="projects">
+  <div class="container">
+    <h2 class="section-title">My Projects</h2>
+    
+    <div class="projects-grid">
+      <div *ngFor="let project of projects()" class="project-card" data-reveal>
+        <div class="project-header">
+          <h3>{{ project.title }}</h3>
+          <p class="project-role">{{ project.role }}</p>
+        </div>
+        
+        <p class="project-description">{{ project.description }}</p>
+        
+        <div class="project-info">
+          <div class="team-info">
+            <span class="badge">Team Size: {{ project.teamSize }}</span>
+          </div>
+          <div class="technologies">
+            <span *ngFor="let tech of project.technologies" class="tech-badge">{{ tech }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

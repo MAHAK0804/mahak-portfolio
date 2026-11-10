@@ -1,0 +1,102 @@
+#projects {
+  padding: 80px 20px;
+  /* background: white; */
+}
+
+.projects {
+  padding: 80px 20px;
+  background: radial-gradient(circle at 10% 20%, rgba(153,246,207,.08), transparent 25%), #0f1419;
+  perspective: 1200px;
+}
+
+.projects .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
+  margin-top: 3rem;
+}
+
+.project-card {
+  background: linear-gradient(145deg, rgba(34, 45, 47, .95), rgba(20, 27, 30, .95));
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--depth-shadow);
+  transform: rotateX(1deg) rotateY(-1deg);
+  transform-style: preserve-3d;
+  animation: cardRise .7s both, cardFloat 7s 1s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 25%, rgba(153,246,207,.08) 50%, transparent 75%); transform: translateX(-120%); animation: cardSheen 6s 2s ease-in-out infinite; pointer-events: none; }
+
+.project-card:nth-child(2) { animation-delay: .12s; }
+.project-card:nth-child(3) { animation-delay: .24s; }
+
+.project-card:hover {
+  transform: translateY(-10px) rotateX(5deg) rotateY(-4deg) translateZ(12px);
+  box-shadow: 0 15px 50px rgba(0, 217, 255, 0.2);
+  border-color: var(--coral);
+  background: rgba(153, 246, 207, 0.06);
+  animation-play-state: paused;
+}
+
+.project-header h3 {
+  font-size: 1.5rem;
+  color: #00d9ff;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 8px rgba(0, 217, 255, 0.2);
+}
+
+.project-role {
+  color: #0099cc;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0;
+  text-shadow: 0 0 5px rgba(0, 153, 204, 0.2);
+}
+
+.project-description {
+  color: #a0a0a0;
+  line-height: 1.8;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.project-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #00d9ff;
+}
+
+.team-info {
+  margin-bottom: 1rem;
+}
+
+.technologies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@keyframes cardRise { from { opacity: 0; transform: translateY(28px) rotateX(10deg); } to { opacity: 1; transform: rotateX(1deg) rotateY(-1deg); } }
+@keyframes cardFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes cardSheen { 0%, 65%, 100% { transform: translateX(-120%); } 80% { transform: translateX(120%); } }
+
+@media (max-width: 768px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .project-header h3 {
+    font-size: 1.3rem;
+  }
+}

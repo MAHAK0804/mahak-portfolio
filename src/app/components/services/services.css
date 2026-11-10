@@ -1,0 +1,83 @@
+#services {
+  padding: 80px 20px;
+  /* background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); */
+}
+
+.services {
+  padding: 80px 20px;
+  background: linear-gradient(135deg, #1c2728 0%, #101418 100%);
+  perspective: 1200px;
+}
+
+.services .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.service-card {
+  background: rgba(28, 39, 40, .86);
+  padding: 2.5rem;
+  border-radius: 2px;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(0, 217, 255, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid var(--line);
+  transform-style: preserve-3d;
+  animation: serviceRise .7s both, serviceFloat 6s 1s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::after { content: ''; position: absolute; width: 90px; height: 90px; right: -35px; top: -35px; border: 1px solid rgba(255,128,102,.45); border-radius: 50%; animation: serviceOrbit 8s linear infinite; pointer-events: none; }
+
+.service-card:nth-child(2) { animation-delay: .12s; }
+.service-card:nth-child(3) { animation-delay: .24s; }
+
+.service-card:hover {
+  transform: translateY(-8px) rotateX(6deg) rotateY(3deg) translateZ(14px);
+  box-shadow: 0 15px 50px rgba(0, 217, 255, 0.2);
+  background: rgba(0, 217, 255, 0.05);
+  border-color: var(--coral);
+  animation-play-state: paused;
+}
+
+.service-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.service-card h3 {
+  font-size: 1.3rem;
+  color: #00d9ff;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(0, 217, 255, 0.2);
+}
+
+.service-card p {
+  color: #a0a0a0;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+@keyframes serviceRise { from { opacity: 0; transform: translateY(24px) rotateY(-8deg); } to { opacity: 1; transform: translateY(0) rotateY(0); } }
+@keyframes serviceFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes serviceOrbit { to { rotate: 1turn; } }
+
+@media (max-width: 768px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .service-card {
+    padding: 2rem;
+  }
+}

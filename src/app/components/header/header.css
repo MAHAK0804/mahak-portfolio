@@ -1,0 +1,141 @@
+.header {
+  background: rgba(10, 15, 23, .86);
+  box-shadow: 0 2px 15px rgba(0, 217, 255, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+  animation: navDrop .7s ease both;
+}
+
+.navbar {
+  padding: 1rem 0;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  flex: 1;
+}
+
+.logo h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--mint);
+  margin: 0;
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+}
+
+.logo .subtitle {
+  font-size: 0.75rem;
+  color: #a0a0a0;
+  margin: 0;
+  font-weight: 500;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: #e0e0e0;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.nav-menu a:hover {
+  color: var(--coral);
+  text-shadow: 0 0 5px rgba(0, 217, 255, 0.3);
+}
+
+.nav-menu a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background: var(--coral);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 5px #00d9ff;
+}
+
+.nav-menu a:hover::after {
+  width: 100%;
+}
+
+@keyframes navDrop { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 5px;
+}
+
+.menu-toggle span {
+  width: 25px;
+  height: 3px;
+  background: var(--mint);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 5px rgba(0, 217, 255, 0.2);
+}
+
+.menu-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(8px, 8px);
+}
+
+.menu-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(8px, -8px);
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: flex;
+  }
+
+  .nav-menu {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    flex-direction: column;
+    background: #0a0f17;
+    padding: 1.5rem;
+    gap: 1rem;
+    box-shadow: 0 5px 20px rgba(0, 217, 255, 0.2);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    border-bottom: 1px solid #00d9ff;
+  }
+
+  .nav-menu.active {
+    max-height: 400px;
+  }
+
+  .logo h1 {
+    font-size: 1.2rem;
+  }
+}

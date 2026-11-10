@@ -1,0 +1,141 @@
+<section id="manage" class="manager-section">
+  <div class="manager-shell">
+    <div class="manager-heading">
+      <div>
+        <p class="manager-eyebrow">Private workspace</p>
+        <h2>Portfolio manager</h2>
+        <p class="manager-intro">Edit the shared portfolio content. Saved changes are published for every visitor.</p>
+        <a class="portfolio-link" routerLink="/">← View portfolio</a>
+      </div>
+      <div class="manager-actions" *ngIf="isAuthenticated()">
+          <span class="saved-message" *ngIf="saveMessage()" role="status">{{ saveMessage() }}</span>
+          <button class="manager-button manager-button-primary" type="button" (click)="save()" [disabled]="isBusy()">{{ isBusy() ? 'Saving...' : 'Save' }}</button>
+        <button class="manager-button" type="button" (click)="reset()" [disabled]="isBusy()">Reset defaults</button>
+        <button class="manager-button" type="button" (click)="logout()" [disabled]="isBusy()">Sign out</button>
+      </div>
+    </div>
+
+    <p class="manager-status" *ngIf="!isReady()" aria-live="polite">Connecting to shared portfolio...</p>
+    <div class="manager-notice" *ngIf="isReady() && !isConfigured">
+      <h3>Shared storage needs setup</h3>
+      <p>Configure your Supabase project URL, anon key, and owner user ID in <code>src/app/services/supabase.config.ts</code>, then apply the SQL setup instructions.</p>
+    </div>
+    <div class="manager-notice" *ngIf="isReady() && hasLoadError()">
+      <p class="manager-error" role="alert">{{ errorMessage() }}</p>
+      <button class="manager-button" type="button" (click)="initialize()" [disabled]="isBusy()">Retry connection</button>
+    </div>
+    <form class="login-panel" *ngIf="isReady() && isConfigured && !isAuthenticated() && !hasLoadError()" (ngSubmit)="login()">
+      <h3>Owner sign in</h3>
+      <label>Email<input type="email" name="email" [(ngModel)]="loginEmail" autocomplete="username" required /></label>
+      <label>Password<input type="password" name="password" [(ngModel)]="loginPassword" autocomplete="current-password" required /></label>
+      <p class="manager-error" *ngIf="errorMessage()" role="alert">{{ errorMessage() }}</p>
+      <button class="manager-button manager-button-primary" type="submit" [disabled]="isBusy()">{{ isBusy() ? 'Signing in...' : 'Sign in' }}</button>
+    </form>
+    <p class="manager-error" *ngIf="isAuthenticated() && errorMessage()" role="alert">{{ errorMessage() }}</p>
+
+    <div class="manager-tabs" role="tablist" aria-label="Portfolio sections" *ngIf="isReady() && isAuthenticated() && !hasLoadError()">
+      <button id="tab-projects" role="tab" type="button" [attr.aria-selected]="activeTab() === 'projects'" aria-controls="panel-projects" (click)="activeTab.set('projects')"><span>Projects</span><small>{{ projects.length }}</small></button>
+      <button id="tab-experience" role="tab" type="button" [attr.aria-selected]="activeTab() === 'experience'" aria-controls="panel-experience" (click)="activeTab.set('experience')"><span>Experience</span><small>{{ experiences.length }}</small></button>
+      <button id="tab-services" role="tab" type="button" [attr.aria-selected]="activeTab() === 'services'" aria-controls="panel-services" (click)="activeTab.set('services')"><span>Services</span><small>{{ services.length }}</small></button>
+      <button id="tab-technologies" role="tab" type="button" [attr.aria-selected]="activeTab() === 'technologies'" aria-controls="panel-technologies" (click)="activeTab.set('technologies')"><span>Technologies</span><small>{{ skills.length }}</small></button>
+    </div>
+
+    <div class="manager-content" *ngIf="isReady() && isAuthenticated() && !hasLoadError()">
+      <article class="editor-panel" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" *ngIf="activeTab() === 'projects'">
+        <div class="panel-title"><span>01</span><h3>Projects</h3></div>
+        <div class="record-list">
+          <details class="record" *ngFor="let project of projects; let index = index">
+            <summary><strong>{{ project.title || 'Untitled project' }}</strong><span>{{ project.role }}</span></summary>
+            <div class="record-fields">
+            <div class="record-topline"><strong>Edit project</strong><button class="remove-button" type="button" (click)="removeProject(index)">Remove</button></div>
+            <div class="field-grid">
+              <label>Title<input [(ngModel)]="project.title" /></label>
+              <label>Role<input [(ngModel)]="project.role" /></label>
+              <label>Team size<input [(ngModel)]="project.teamSize" /></label>
+              <label>Technologies<input [ngModel]="projectTechnologies(project)" (ngModelChange)="updateProjectTechnologies(project, $event)" placeholder="React, Node.js" /></label>
+            </div>
+            <label>Description<textarea [(ngModel)]="project.description" rows="3"></textarea></label>
+            </div>
+          </details>
+        </div>
+        <details class="add-form">
+          <summary>+ Add project</summary>
+          <div class="record-fields">
+          <div class="field-grid">
+            <label>Title<input [(ngModel)]="newProject.title" /></label>
+            <label>Role<input [(ngModel)]="newProject.role" /></label>
+            <label>Team size<input [(ngModel)]="newProject.teamSize" /></label>
+            <label>Technologies<input [ngModel]="projectTechnologies(newProject)" (ngModelChange)="updateProjectTechnologies(newProject, $event)" placeholder="React, Node.js" /></label>
+          </div>
+          <label>Description<textarea [(ngModel)]="newProject.description" rows="2"></textarea></label>
+          <button class="add-button" type="button" (click)="addProject()">+ Add project</button>
+          </div>
+        </details>
+      </article>
+
+      <article class="editor-panel" id="panel-experience" role="tabpanel" aria-labelledby="tab-experience" *ngIf="activeTab() === 'experience'">
+        <div class="panel-title"><span>02</span><h3>Experience</h3></div>
+        <div class="record-list">
+          <details class="record" *ngFor="let experience of experiences; let index = index">
+            <summary><strong>{{ experience.position || 'Untitled position' }}</strong><span>{{ experience.company }}</span></summary>
+            <div class="record-fields">
+            <div class="record-topline"><strong>Edit experience</strong><button class="remove-button" type="button" (click)="removeExperience(index)">Remove</button></div>
+            <label>Position<input [(ngModel)]="experience.position" /></label>
+            <div class="field-grid">
+              <label>Company<input [(ngModel)]="experience.company" /></label>
+              <label>Location<input [(ngModel)]="experience.location" /></label>
+            </div>
+            <label>Description<textarea [(ngModel)]="experience.description" rows="5"></textarea></label>
+            </div>
+          </details>
+        </div>
+        <details class="add-form">
+          <summary>+ Add experience</summary>
+          <div class="record-fields">
+          <label>Position<input [(ngModel)]="newExperience.position" /></label>
+          <div class="field-grid">
+            <label>Company<input [(ngModel)]="newExperience.company" /></label>
+            <label>Location<input [(ngModel)]="newExperience.location" /></label>
+          </div>
+          <label>Description<textarea [(ngModel)]="newExperience.description" rows="3"></textarea></label>
+          <p class="saved-message" *ngIf="experienceMessage()" role="status">{{ experienceMessage() }}</p>
+          <button class="add-button" type="button" (click)="addExperience()">+ Add experience</button>
+          </div>
+        </details>
+      </article>
+
+      <article class="editor-panel" id="panel-services" role="tabpanel" aria-labelledby="tab-services" *ngIf="activeTab() === 'services'">
+        <div class="panel-title"><span>03</span><h3>Services</h3></div>
+        <div class="record-list">
+          <details class="record" *ngFor="let service of services; let index = index">
+            <summary><strong>{{ service.name || 'Untitled service' }}</strong><span>{{ service.icon }}</span></summary>
+            <div class="record-fields">
+            <div class="record-topline"><strong>Edit service</strong><button class="remove-button" type="button" (click)="removeService(index)">Remove</button></div>
+            <div class="field-grid">
+              <label>Name<input [(ngModel)]="service.name" /></label>
+              <label>Icon<input [(ngModel)]="service.icon" /></label>
+            </div>
+            <label>Description<textarea [(ngModel)]="service.description" rows="3"></textarea></label>
+            </div>
+          </details>
+        </div>
+        <details class="add-form">
+          <summary>+ Add service</summary>
+          <div class="record-fields">
+          <div class="field-grid">
+            <label>Name<input [(ngModel)]="newService.name" /></label>
+            <label>Icon<input [(ngModel)]="newService.icon" /></label>
+          </div>
+          <label>Description<textarea [(ngModel)]="newService.description" rows="2"></textarea></label>
+          <button class="add-button" type="button" (click)="addService()">+ Add service</button>
+          </div>
+        </details>
+      </article>
+
+      <article class="editor-panel" id="panel-technologies" role="tabpanel" aria-labelledby="tab-technologies" *ngIf="activeTab() === 'technologies'">
+        <div class="panel-title"><span>04</span><h3>Technologies</h3></div>
+        <label>Technology list <span class="field-hint">Separate each item with a comma</span><textarea [(ngModel)]="skillsText" rows="3" placeholder="JavaScript, TypeScript, React"></textarea></label>
+      </article>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,132 @@
+#experience {
+  padding: 80px 20px;
+  background: #000000;
+}
+
+.experience {
+  padding: 80px 20px;
+  background: linear-gradient(110deg, #101418, #182123);
+  perspective: 1200px;
+}
+
+.experience .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.experience-timeline {
+  position: relative;
+  padding: 2rem 0;
+  margin-top: 3rem;
+}
+
+.experience-timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(var(--mint), var(--coral));
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+}
+
+.timeline-item {
+  margin-bottom: 3rem;
+  position: relative;
+  animation: timelineReveal .8s both;
+}
+
+.timeline-item:nth-child(even) { animation-delay: .16s; }
+
+.timeline-item:nth-child(odd) {
+  margin-left: 0;
+  margin-right: auto;
+  width: 45%;
+  text-align: right;
+  padding-right: 3rem;
+}
+
+.timeline-item:nth-child(even) {
+  margin-left: auto;
+  margin-right: 0;
+  width: 45%;
+  text-align: left;
+  padding-left: 3rem;
+}
+
+.timeline-marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--mint);
+  border: 4px solid #0f1419;
+  border-radius: 50%;
+  top: 0;
+  right: -100px;
+  box-shadow: 0 0 15px #00d9ff;
+}
+
+.timeline-item:nth-child(even) .timeline-marker {
+  right: auto;
+  left: -100px;
+}
+
+.timeline-content {
+  background: linear-gradient(145deg, rgba(34,45,47,.95), rgba(18,24,27,.95));
+  padding: 2rem;
+  border-radius: 2px;
+  box-shadow: 0 5px 20px rgba(0, 217, 255, 0.1);
+  border-left: 3px solid var(--coral);
+  box-shadow: var(--depth-shadow);
+  transform: perspective(800px) rotateY(0deg);
+  transition: transform .3s ease, border-color .3s ease;
+  animation: experienceFloat 6s ease-in-out infinite;
+}
+
+.timeline-content h3 {
+  font-size: 1.3rem;
+  color: var(--mint);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 8px rgba(0, 217, 255, 0.2);
+}
+
+.timeline-content .company {
+  color: var(--coral);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 5px rgba(0, 153, 204, 0.2);
+}
+
+.timeline-content .description {
+  color: #a0a0a0;
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.timeline-content:hover { transform: perspective(800px) rotateY(3deg) translateZ(10px); border-color: var(--mint); animation-play-state: paused; }
+
+@keyframes timelineReveal { from { opacity: 0; transform: translateZ(-50px) translateY(20px); } to { opacity: 1; transform: translateZ(0) translateY(0); } }
+@keyframes experienceFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+
+@media (max-width: 768px) {
+  .experience-timeline::before {
+    left: 10px;
+  }
+
+  .timeline-item,
+  .timeline-item:nth-child(odd),
+  .timeline-item:nth-child(even) {
+    width: 100%;
+    margin: 0;
+    padding-left: 50px;
+    padding-right: 0;
+    text-align: left;
+  }
+
+  .timeline-marker,
+  .timeline-item:nth-child(even) .timeline-marker {
+    left: 0;
+    right: auto;
+  }
+}

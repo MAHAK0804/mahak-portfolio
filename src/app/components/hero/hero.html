@@ -1,0 +1,61 @@
+<section id="hero" class="hero" (mousemove)="handlePointerMove($event)" (mouseleave)="resetPointer()">
+  <div class="hero-content">
+    <div class="hero-text">
+      <p class="hero-kicker"><span></span> Available for meaningful builds</p>
+      <h1 class="hero-title">Hi - I'm <span>Mahak </span></h1>
+      <p class="hero-subtitle">FULLSTACK DEVELOPER</p>
+      <p class="hero-description">Crafting innovative solutions to solve real-world problems</p>
+      <div class="hero-buttons">
+        <a href="#contact" class="btn btn-primary">Get In Touch</a>
+        <a href="#projects" class="btn btn-secondary">View My Work</a>
+      </div>
+    </div>
+    <div class="hero-image" [style.--pointer-x]="pointerX + '%'" [style.--pointer-y]="pointerY + '%'">
+      <div class="scene-label scene-label-top">01 / DIGITAL CRAFT</div>
+      <div class="scene-floor"></div>
+      <div class="scene-scanline"></div>
+      <span class="scene-particle particle-one"></span>
+      <span class="scene-particle particle-two"></span>
+      <span class="scene-particle particle-three"></span>
+      <span class="scene-particle particle-four"></span>
+      <div class="scene-orbit orbit-one"></div>
+      <div class="scene-orbit orbit-two"></div>
+      <div class="scene-object" aria-hidden="true">
+        <div class="object-core"><span>&lt;/&gt;</span></div>
+        <div class="object-ring ring-one"></div>
+        <div class="object-ring ring-two"></div>
+        <div class="object-stem"></div>
+      </div>
+      <div class="floating-card card-main">
+        <span class="card-index">01</span>
+        <strong>Build / Ship</strong>
+        <small>Ideas into interfaces</small>
+      </div>
+      <div class="floating-card card-side"><span class="status-dot"></span><span>system online</span></div>
+      <div class="floating-card card-spec"><span>02</span><strong>UX / API / 3D</strong></div>
+      <div class="scene-label scene-label-bottom">REACT · NODE · TYPESCRIPT</div>
+    </div>
+  </div>
+
+  <div class="skills-section">
+    <div class="skills-heading"><span>02</span><h3>Technologies I Work With</h3></div>
+    <div class="tech-marquee" aria-label="Technologies I work with">
+      <div class="tech-marquee-track">
+        <div class="tech-grid">
+          <div class="tech-item" *ngFor="let skill of skills()">
+            <svg *ngIf="getTechnologyIcon(skill) as icon; else technologyFallback" class="tech-icon" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icon.path" [attr.fill]="'#' + icon.hex"></path></svg>
+            <ng-template #technologyFallback><span class="tech-icon-fallback" aria-hidden="true">{{ skill.slice(0, 2).toUpperCase() }}</span></ng-template>
+            <span>{{ skill }}</span>
+          </div>
+        </div>
+        <div class="tech-grid" aria-hidden="true">
+          <div class="tech-item" *ngFor="let skill of skills()">
+            <svg *ngIf="getTechnologyIcon(skill) as icon; else technologyFallbackCopy" class="tech-icon" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icon.path" [attr.fill]="'#' + icon.hex"></path></svg>
+            <ng-template #technologyFallbackCopy><span class="tech-icon-fallback" aria-hidden="true">{{ skill.slice(0, 2).toUpperCase() }}</span></ng-template>
+            <span>{{ skill }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

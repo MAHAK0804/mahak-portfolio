@@ -1,0 +1,14 @@
+<section id="services" class="services">
+  <div class="container">
+    <h2 class="section-title">Services & Offers</h2>
+    <p class="section-subtitle">I offer a wide range of services to ensure you have the best written code and stay ahead in the competition.</p>
+    
+    <div class="services-grid">
+      <div *ngFor="let service of services()" class="service-card" data-reveal>
+        <div class="service-icon">{{ service.icon }}</div>
+        <h3>{{ service.name }}</h3>
+        <p>{{ service.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>

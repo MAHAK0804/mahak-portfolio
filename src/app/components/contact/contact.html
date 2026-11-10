@@ -1,0 +1,76 @@
+<section id="contact" class="contact">
+  <div class="container">
+    <h2 class="section-title">Let's Talk</h2>
+    <p class="section-subtitle">We'd love to help - Crafting innovative solutions to solve real-world problems</p>
+    
+    <div class="contact-wrapper">
+      <form class="contact-form" data-reveal (ngSubmit)="submitForm()">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            placeholder="Your name"
+            [(ngModel)]="formData.name"
+            name="name"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            placeholder="your@email.com"
+            [(ngModel)]="formData.email"
+            name="email"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input 
+            type="text" 
+            id="subject" 
+            placeholder="Project inquiry"
+            [(ngModel)]="formData.subject"
+            name="subject"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea 
+            id="message" 
+            placeholder="Your message..."
+            rows="5"
+            [(ngModel)]="formData.message"
+            name="message"
+            required
+          ></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary submit-btn">Send Message</button>
+      </form>
+      
+      <div class="contact-info" data-reveal>
+        <h3>Contact Information</h3>
+        <p>
+          <strong>Email:</strong> 
+          <a href="mailto:mahaksde@gmail.com">mahaksde@gmail.com</a>
+        </p>
+        <div class="social-links">
+          <h4>Connect With Me:</h4>
+          <div class="social-icons">
+            <a href="https://github.com/MAHAK0804" target="_blank" title="GitHub">🔗 GitHub</a>
+            <a href="https://www.linkedin.com/in/mahak-garg-09197523b/" target="_blank" title="LinkedIn">🔗 LinkedIn</a>
+            <a href="https://twitter.com/MahakGa" target="_blank" title="Twitter">🔗 Twitter</a>
+            <a href="https://www.instagram.com/mahak_asde/" target="_blank" title="Instagram">🔗 Instagram</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
