@@ -86,8 +86,8 @@ class MainActivity : ComponentActivity() {
                 PortfolioManagerApp(
                     SupabaseRepository(
                         projectUrl = BuildConfig.SUPABASE_URL,
-                        anonKey = BuildConfig.SUPABASE_ANON_KEY,
-                        ownerId = BuildConfig.SUPABASE_ADMIN_USER_ID
+                        anonKey = BuildConfig.ANON_KEY,
+                        ownerId = BuildConfig.ADMIN_USER_ID
                     )
                 )
             }
@@ -231,12 +231,24 @@ private fun PortfolioManagerApp(repository: SupabaseRepository) {
                             messages = repository.loadContactMessages()
                             snackbarHostState.showSnackbar("Reply emailed to ${message.email}.")
                         } catch (error: Exception) {
-                            errorMessage = error.message ?: "Could not send the reply."
+                            val failureMessage = error.message ?: "Could not send the reply."
+                            errorMessage = failureMessage
+                            if (error is ContactReplyEmailException) {
+                                replyDraft = ""
+                                replyingToMessageId = null
+                            }
                             try {
                                 messages = repository.loadContactMessages()
                             } catch (refreshError: Exception) {
                                 errorMessage = "${errorMessage}; inbox refresh failed: ${refreshError.message ?: "unknown error"}"
                             }
+                            snackbarHostState.showSnackbar(
+                                if (error is ContactReplyEmailException) {
+                                    "Reply saved, but its email could not be sent. Use Retry sending email in the inbox."
+                                } else {
+                                    failureMessage
+                                }
+                            )
                         } finally {
                             isBusy = false
                         }
@@ -253,6 +265,7 @@ private fun PortfolioManagerApp(repository: SupabaseRepository) {
                         snackbarHostState.showSnackbar("Reply email sent.")
                     } catch (error: Exception) {
                         errorMessage = error.message ?: "Could not send the reply email."
+                        snackbarHostState.showSnackbar(errorMessage ?: "Could not send the reply email.")
                     } finally {
                         isBusy = false
                     }

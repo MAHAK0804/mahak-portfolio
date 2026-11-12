@@ -1,10 +1,15 @@
 export function corsHeaders(origin: string, allowedOrigins: string[]): HeadersInit {
+  const allowAllOrigins = allowedOrigins.includes('*');
   return {
     'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
-    ...(allowedOrigins.includes(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
+    ...(allowAllOrigins
+      ? { 'Access-Control-Allow-Origin': '*' }
+      : allowedOrigins.includes(origin)
+        ? { 'Access-Control-Allow-Origin': origin }
+        : {}),
   };
 }
 

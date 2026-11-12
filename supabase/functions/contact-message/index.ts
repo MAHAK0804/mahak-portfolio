@@ -1,18 +1,19 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 import { corsHeaders, errorMessage, jsonResponse } from '../_shared/http.ts';
 
-const ownerId = Deno.env.get('SUPABASE_ADMIN_USER_ID') ?? '';
+const ownerId = Deno.env.get('ADMIN_USER_ID') ?? '';
 const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+const allowAllOrigins = allowedOrigins.includes('*');
 
 Deno.serve(async (request) => {
   const origin = request.headers.get('Origin') ?? '';
   const headers = corsHeaders(origin, allowedOrigins);
 
   if (request.method === 'OPTIONS') {
-    if (!origin || !allowedOrigins.includes(origin)) {
+    if (!origin || (!allowAllOrigins && !allowedOrigins.includes(origin))) {
       return jsonResponse({ error: 'This website is not allowed to submit contact messages.' }, 403, headers);
     }
     return new Response('ok', { headers });
@@ -20,12 +21,14 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed.' }, 405, headers);
   }
-  if (!origin || !allowedOrigins.includes(origin)) {
+  if (!origin || (!allowAllOrigins && !allowedOrigins.includes(origin))) {
     return jsonResponse({ error: 'This website is not allowed to submit contact messages.' }, 403, headers);
   }
 
   try {
-    if (!ownerId || !Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+    const serviceRoleKey = Deno.env.get('SERVICE_ROLE_KEY')
+      ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!ownerId || !serviceRoleKey) {
       throw new Error('Contact inbox server configuration is incomplete.');
     }
 
@@ -64,7 +67,7 @@ Deno.serve(async (request) => {
     const ipHash = Array.from(new Uint8Array(ipHashBytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      serviceRoleKey,
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
     const { data: allowed, error: rateLimitError } = await supabase.rpc(

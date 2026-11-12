@@ -1,11 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 import { corsHeaders, errorMessage, jsonResponse } from '../_shared/http.ts';
 
-const ownerId = Deno.env.get('SUPABASE_ADMIN_USER_ID') ?? '';
+const ownerId = Deno.env.get('ADMIN_USER_ID') ?? '';
 const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+const allowAllOrigins = allowedOrigins.includes('*');
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/gu, (character) => ({
@@ -22,7 +23,7 @@ Deno.serve(async (request) => {
   const headers = corsHeaders(origin, allowedOrigins);
 
   if (request.method === 'OPTIONS') {
-    if (origin && allowedOrigins.length && !allowedOrigins.includes(origin)) {
+    if (origin && allowedOrigins.length && !allowAllOrigins && !allowedOrigins.includes(origin)) {
       return jsonResponse({ error: 'This website is not allowed to send replies.' }, 403, headers);
     }
     return new Response('ok', { headers });
@@ -34,13 +35,15 @@ Deno.serve(async (request) => {
     if (!authorization?.startsWith('Bearer ')) {
       return jsonResponse({ error: 'Owner sign-in is required.' }, 401, headers);
     }
-    if (origin && allowedOrigins.length && !allowedOrigins.includes(origin)) {
+    if (origin && allowedOrigins.length && !allowAllOrigins && !allowedOrigins.includes(origin)) {
       return jsonResponse({ error: 'This website is not allowed to send replies.' }, 403, headers);
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const serviceRoleKey = Deno.env.get('SERVICE_ROLE_KEY')
+      ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!serviceRoleKey) throw new Error('Supabase service-role key is not configured.');
+    const userClient = createClient(supabaseUrl, Deno.env.get('ANON_KEY')!, {
       global: { headers: { Authorization: authorization } },
       auth: { persistSession: false, autoRefreshToken: false },
     });

@@ -10,8 +10,8 @@ This is a native Kotlin/Jetpack Compose Android app for editing the same portfol
 
    ```properties
    SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_ANON_KEY=your-public-anon-or-publishable-key
-   SUPABASE_ADMIN_USER_ID=your-owner-user-uuid
+   ANON_KEY=your-public-anon-or-publishable-key
+   ADMIN_USER_ID=your-owner-user-uuid
    ```
 
    `local.properties` is ignored by Git. Never use a Supabase `service_role` key in this app. Row-level security must be enabled as described in `../SUPABASE_SETUP.md`.

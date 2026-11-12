@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { SUPABASE_ADMIN_USER_ID, SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase.config';
+import { ADMIN_USER_ID, ANON_KEY, SUPABASE_URL } from './supabase.config';
 
 export interface Project {
   id: number;
@@ -242,13 +242,13 @@ export class PortfolioService {
   isSharedStorageConfigured(): boolean {
     return SUPABASE_URL.startsWith('https://')
       && !SUPABASE_URL.includes('YOUR_')
-      && !SUPABASE_ANON_KEY.includes('YOUR_');
+      && !ANON_KEY.includes('YOUR_');
   }
 
   isAdminConfigured(): boolean {
     return this.isSharedStorageConfigured()
-      && SUPABASE_ADMIN_USER_ID.length > 0
-      && !SUPABASE_ADMIN_USER_ID.includes('YOUR_');
+      && ADMIN_USER_ID.length > 0
+      && !ADMIN_USER_ID.includes('YOUR_');
   }
 
   async loadSharedContent(): Promise<void> {
@@ -271,7 +271,7 @@ export class PortfolioService {
     const client = await this.getClient();
     const { data, error } = await client.auth.getUser();
     if (error || !data.user) return false;
-    if (data.user.id === SUPABASE_ADMIN_USER_ID) return true;
+    if (data.user.id === ADMIN_USER_ID) return true;
 
     await client.auth.signOut();
     return false;
@@ -284,7 +284,7 @@ export class PortfolioService {
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
-    if (data.user?.id !== SUPABASE_ADMIN_USER_ID) {
+    if (data.user?.id !== ADMIN_USER_ID) {
       await client.auth.signOut();
       throw new Error('This account does not have portfolio editor access.');
     }
@@ -301,7 +301,7 @@ export class PortfolioService {
 
     const client = await this.getClient();
     const { data, error: sessionError } = await client.auth.getUser();
-    if (sessionError || data.user?.id !== SUPABASE_ADMIN_USER_ID) {
+    if (sessionError || data.user?.id !== ADMIN_USER_ID) {
       throw new Error('Sign in with the portfolio owner account before saving.');
     }
 
@@ -310,7 +310,7 @@ export class PortfolioService {
       .from('portfolio_content')
       .upsert({
         id: 1,
-        owner_id: SUPABASE_ADMIN_USER_ID,
+        owner_id: ADMIN_USER_ID,
         content,
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' })
@@ -342,7 +342,52 @@ export class PortfolioService {
     const { error } = await client.functions.invoke('contact-message', {
       body: input
     });
-    if (error) throw error;
+    if (!error) return;
+
+    const functionError = this.getFunctionError(error);
+    if (functionError?.name === 'FunctionsHttpError' && functionError.context) {
+      const response = functionError.context;
+      let responseMessage = '';
+      try {
+        const body: unknown = await response.clone().json();
+        if (typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string') {
+          responseMessage = body.error;
+        }
+      } catch {
+        responseMessage = '';
+      }
+
+      if (responseMessage) throw new Error(responseMessage);
+      if (response.status === 429) {
+        throw new Error('Too many messages have been sent. Please wait a while and try again.');
+      }
+      if (response.status === 403) {
+        throw new Error('This site is not currently allowed to send messages. Please try again later.');
+      }
+      if (response.status >= 500) {
+        throw new Error('The message service is temporarily unavailable. Please try again later.');
+      }
+      throw new Error('Your message could not be accepted. Please check the form and try again.');
+    }
+
+    if (functionError?.name === 'FunctionsFetchError') {
+      throw new Error('Could not connect to the message service. Check your internet connection and try again.');
+    }
+
+    if (functionError?.name === 'FunctionsRelayError') {
+      throw new Error('The message service could not process your request. Please try again later.');
+    }
+
+    throw new Error('Your message could not be sent. Please try again.');
+  }
+
+  private getFunctionError(error: unknown): { name: string; context?: Response } | undefined {
+    if (typeof error !== 'object' || error === null || !('name' in error) || typeof error.name !== 'string') {
+      return undefined;
+    }
+
+    const context = 'context' in error && error.context instanceof Response ? error.context : undefined;
+    return { name: error.name, context };
   }
 
   async loadContactMessages(): Promise<ContactMessage[]> {
@@ -399,7 +444,7 @@ export class PortfolioService {
 
   private async requireAdminUser(client: SupabaseClient): Promise<void> {
     const { data, error } = await client.auth.getUser();
-    if (error || data.user?.id !== SUPABASE_ADMIN_USER_ID) {
+    if (error || data.user?.id !== ADMIN_USER_ID) {
       throw new Error('Sign in with the portfolio owner account to access messages.');
     }
   }
@@ -425,7 +470,7 @@ export class PortfolioService {
     if (!this.clientPromise) {
       const browser = this.isBrowser();
       this.clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
-        createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        createClient(SUPABASE_URL, ANON_KEY, {
           auth: {
             autoRefreshToken: browser,
             persistSession: browser,

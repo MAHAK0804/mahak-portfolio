@@ -102,8 +102,42 @@
   overflow-wrap: anywhere;
 }
 
-.contact-success { color: var(--mint); }
 .contact-error { color: var(--coral); }
+
+.contact-toast {
+  position: fixed;
+  z-index: 1000;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  width: min(28rem, calc(100vw - 2.5rem));
+  padding: 1rem 1.125rem;
+  color: var(--paper);
+  background: #172923;
+  border: 1px solid rgba(153, 246, 207, .45);
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .35);
+  animation: toastEnter .22s ease-out;
+}
+
+.contact-toast p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.contact-toast-icon {
+  display: grid;
+  flex: 0 0 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  color: #0f1419;
+  background: var(--mint);
+  border-radius: 50%;
+  font-weight: 700;
+}
 
 .website-field {
   position: absolute;
@@ -174,6 +208,11 @@
 }
 
 @keyframes formFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes toastEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-toast { animation: none; }
+}
 
 @media (max-width: 768px) {
   .contact-wrapper {

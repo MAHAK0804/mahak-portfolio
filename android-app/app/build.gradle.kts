@@ -41,8 +41,8 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "SUPABASE_URL", "\"${buildConfigValue("SUPABASE_URL")}\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${buildConfigValue("SUPABASE_ANON_KEY")}\"")
-        buildConfigField("String", "SUPABASE_ADMIN_USER_ID", "\"${buildConfigValue("SUPABASE_ADMIN_USER_ID")}\"")
+        buildConfigField("String", "ANON_KEY", "\"${buildConfigValue("ANON_KEY")}\"")
+        buildConfigField("String", "ADMIN_USER_ID", "\"${buildConfigValue("ADMIN_USER_ID")}\"")
     }
 
     buildTypes {

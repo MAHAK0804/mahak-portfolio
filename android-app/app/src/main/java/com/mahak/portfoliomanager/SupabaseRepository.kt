@@ -27,6 +27,8 @@ data class ContactMessage(
     val replies: List<ContactMessageReply>
 )
 
+class ContactReplyEmailException(message: String, cause: Throwable) : IllegalStateException(message, cause)
+
 private data class AuthSession(
     val accessToken: String,
     val refreshToken: String,
@@ -167,7 +169,7 @@ class SupabaseRepository(
         try {
             sendContactReplyEmail(token, replyId)
         } catch (error: Exception) {
-            throw IllegalStateException(
+            throw ContactReplyEmailException(
                 "Reply saved in the inbox, but its email could not be sent: ${error.message}",
                 error
             )
@@ -212,7 +214,7 @@ class SupabaseRepository(
 
     private fun requireConfigured() {
         check(isConfigured) {
-            "Configure SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_ADMIN_USER_ID in android-app/local.properties."
+            "Configure SUPABASE_URL, ANON_KEY, and ADMIN_USER_ID in android-app/local.properties."
         }
     }
 

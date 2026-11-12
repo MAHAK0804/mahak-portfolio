@@ -31,6 +31,7 @@ revoke all on public.contact_messages, public.contact_message_replies
 grant select on public.contact_messages to authenticated;
 grant update (is_read) on public.contact_messages to authenticated;
 grant select, insert on public.contact_message_replies to authenticated;
+grant select, insert, update, delete on public.contact_messages, public.contact_message_replies to service_role;
 create policy "Portfolio owner can read contact messages"
   on public.contact_messages for select to authenticated
   using (auth.uid() = '94cec00f-fcca-464a-81cf-39c7256271ca'::uuid);

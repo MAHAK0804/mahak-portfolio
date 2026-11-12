@@ -4,7 +4,7 @@
     <p class="section-subtitle">We'd love to help - Crafting innovative solutions to solve real-world problems</p>
     
     <div class="contact-wrapper">
-      <form class="contact-form" data-reveal (ngSubmit)="submitForm()">
+      <form class="contact-form" data-reveal #contactNgForm="ngForm" (ngSubmit)="submitForm()">
         <div class="form-group">
           <label for="name">Full Name</label>
           <input 
@@ -57,10 +57,9 @@
           <input id="website" type="text" name="website" [(ngModel)]="formData.website" tabindex="-1" autocomplete="off">
         </div>
 
-        <p class="contact-status contact-success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
-        <p class="contact-status contact-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
-        <button type="submit" class="btn btn-primary submit-btn" [disabled]="isSending">
-          {{ isSending ? 'Sending...' : 'Send Message' }}
+        <p class="contact-status contact-error" *ngIf="errorMessage()" role="alert">{{ errorMessage() }}</p>
+        <button type="submit" class="btn btn-primary submit-btn" [disabled]="isSending()">
+          {{ isSending() ? 'Sending...' : 'Send Message' }}
         </button>
       </form>
       
@@ -80,6 +79,10 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="contact-toast" *ngIf="successToast()" role="status" aria-live="polite">
+      <span class="contact-toast-icon" aria-hidden="true">✓</span>
+      <p>{{ successToast() }}</p>
     </div>
   </div>
 </section>
