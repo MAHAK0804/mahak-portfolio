@@ -38,6 +38,7 @@
       <button id="tab-experience" role="tab" type="button" [attr.aria-selected]="activeTab() === 'experience'" aria-controls="panel-experience" (click)="activeTab.set('experience')"><span>Experience</span><small>{{ experiences.length }}</small></button>
       <button id="tab-services" role="tab" type="button" [attr.aria-selected]="activeTab() === 'services'" aria-controls="panel-services" (click)="activeTab.set('services')"><span>Services</span><small>{{ services.length }}</small></button>
       <button id="tab-technologies" role="tab" type="button" [attr.aria-selected]="activeTab() === 'technologies'" aria-controls="panel-technologies" (click)="activeTab.set('technologies')"><span>Technologies</span><small>{{ skills.length }}</small></button>
+      <button id="tab-messages" role="tab" type="button" [attr.aria-selected]="activeTab() === 'messages'" aria-controls="panel-messages" (click)="activeTab.set('messages')"><span>Inbox</span><small>{{ unreadMessageCount() }}</small></button>
     </div>
 
     <div class="manager-content" *ngIf="isReady() && isAuthenticated() && !hasLoadError()">
@@ -135,6 +136,47 @@
       <article class="editor-panel" id="panel-technologies" role="tabpanel" aria-labelledby="tab-technologies" *ngIf="activeTab() === 'technologies'">
         <div class="panel-title"><span>04</span><h3>Technologies</h3></div>
         <label>Technology list <span class="field-hint">Separate each item with a comma</span><textarea [(ngModel)]="skillsText" rows="3" placeholder="JavaScript, TypeScript, React"></textarea></label>
+      </article>
+
+      <article class="editor-panel" id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" *ngIf="activeTab() === 'messages'">
+        <div class="panel-title">
+          <span>05</span><h3>Visitor messages</h3>
+          <button class="manager-button" type="button" (click)="refreshInbox()">Refresh inbox</button>
+        </div>
+        <p class="manager-error" *ngIf="inboxError()" role="alert">{{ inboxError() }}</p>
+        <p class="inbox-empty" *ngIf="!contactMessages().length && !inboxError()">No visitor messages yet.</p>
+        <div class="record-list">
+          <article class="message-record" *ngFor="let message of contactMessages()">
+            <header class="message-header">
+              <div>
+                <h4>{{ message.subject || 'New portfolio inquiry' }}</h4>
+                <p>{{ message.full_name }} · <a [href]="'mailto:' + message.email">{{ message.email }}</a></p>
+                <time>{{ message.created_at | date:'medium' }}</time>
+              </div>
+              <span class="message-unread" *ngIf="!message.is_read">New</span>
+            </header>
+            <p class="message-body">{{ message.message }}</p>
+            <div class="message-replies" *ngFor="let reply of message.contact_message_replies">
+              <p><strong>Your reply</strong> · {{ reply.created_at | date:'medium' }}</p>
+              <p class="message-body">{{ reply.body }}</p>
+              <p class="reply-delivery" *ngIf="reply.email_sent_at">Email sent {{ reply.email_sent_at | date:'short' }}</p>
+              <button class="add-button" type="button" *ngIf="!reply.email_sent_at" (click)="retryReplyEmail(reply)">Retry sending email</button>
+            </div>
+            <div class="message-actions">
+              <button class="manager-button" type="button" *ngIf="!message.is_read" (click)="markMessageRead(message)">Mark as read</button>
+              <button class="manager-button manager-button-primary" type="button" (click)="startReply(message)">Reply by email</button>
+            </div>
+            <form class="reply-form" *ngIf="replyingTo() === message.id" (ngSubmit)="sendReply(message)">
+              <label>Reply to {{ message.email }}<textarea name="reply" [(ngModel)]="replyDraft" rows="4" maxlength="5000" required></textarea></label>
+              <div class="message-actions">
+                <button class="manager-button" type="button" (click)="cancelReply()">Cancel</button>
+                <button class="manager-button manager-button-primary" type="submit" [disabled]="isSendingReply() || !replyDraft.trim()">
+                  {{ isSendingReply() ? 'Sending...' : 'Send reply by email' }}
+                </button>
+              </div>
+            </form>
+          </article>
+        </div>
       </article>
     </div>
   </div>

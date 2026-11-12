@@ -34,6 +34,24 @@ export interface PortfolioContent {
   skills: string[];
 }
 
+export interface ContactReply {
+  id: string;
+  body: string;
+  created_at: string;
+  email_sent_at: string | null;
+}
+
+export interface ContactMessage {
+  id: string;
+  full_name: string;
+  email: string;
+  subject: string;
+  message: string;
+  created_at: string;
+  is_read: boolean;
+  contact_message_replies: ContactReply[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -311,6 +329,79 @@ export class PortfolioService {
   async resetContent(): Promise<void> {
     this.applyContent(structuredClone(this.defaultContent));
     await this.saveContent();
+  }
+
+  async submitContactMessage(input: {
+    fullName: string;
+    email: string;
+    subject: string;
+    message: string;
+    website: string;
+  }): Promise<void> {
+    const client = await this.getClient();
+    const { error } = await client.functions.invoke('contact-message', {
+      body: input
+    });
+    if (error) throw error;
+  }
+
+  async loadContactMessages(): Promise<ContactMessage[]> {
+    const client = await this.getClient();
+    await this.requireAdminUser(client);
+
+    const { data, error } = await client
+      .from('contact_messages')
+      .select('id, full_name, email, subject, message, created_at, is_read, contact_message_replies(id, body, created_at, email_sent_at)')
+      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true, referencedTable: 'contact_message_replies' });
+
+    if (error) throw error;
+    return data as ContactMessage[];
+  }
+
+  async markContactMessageRead(messageId: string): Promise<void> {
+    const client = await this.getClient();
+    await this.requireAdminUser(client);
+    const { error } = await client
+      .from('contact_messages')
+      .update({ is_read: true })
+      .eq('id', messageId);
+    if (error) throw error;
+  }
+
+  async replyToContactMessage(messageId: string, body: string): Promise<void> {
+    const client = await this.getClient();
+    await this.requireAdminUser(client);
+
+    const { data, error } = await client
+      .from('contact_message_replies')
+      .insert({ message_id: messageId, body: body.trim() })
+      .select('id')
+      .single();
+    if (error) throw error;
+
+    const { error: sendError } = await client.functions.invoke('send-contact-reply', {
+      body: { replyId: data.id }
+    });
+    if (sendError) {
+      throw new Error(`Reply saved, but its email could not be sent: ${sendError.message}`);
+    }
+  }
+
+  async retryContactReplyEmail(replyId: string): Promise<void> {
+    const client = await this.getClient();
+    await this.requireAdminUser(client);
+    const { error } = await client.functions.invoke('send-contact-reply', {
+      body: { replyId }
+    });
+    if (error) throw error;
+  }
+
+  private async requireAdminUser(client: SupabaseClient): Promise<void> {
+    const { data, error } = await client.auth.getUser();
+    if (error || data.user?.id !== SUPABASE_ADMIN_USER_ID) {
+      throw new Error('Sign in with the portfolio owner account to access messages.');
+    }
   }
 
   private getContent(): PortfolioContent {

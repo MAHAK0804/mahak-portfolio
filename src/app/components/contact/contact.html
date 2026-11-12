@@ -51,8 +51,17 @@
             required
           ></textarea>
         </div>
-        
-        <button type="submit" class="btn btn-primary submit-btn">Send Message</button>
+
+        <div class="website-field" aria-hidden="true">
+          <label for="website">Website</label>
+          <input id="website" type="text" name="website" [(ngModel)]="formData.website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <p class="contact-status contact-success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+        <p class="contact-status contact-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+        <button type="submit" class="btn btn-primary submit-btn" [disabled]="isSending">
+          {{ isSending ? 'Sending...' : 'Send Message' }}
+        </button>
       </form>
       
       <div class="contact-info" data-reveal>

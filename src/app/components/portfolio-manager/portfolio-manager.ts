@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Experience, PortfolioService, Project, Service } from '../../services/portfolio';
+import { ContactMessage, ContactReply, Experience, PortfolioService, Project, Service } from '../../services/portfolio';
 
 @Component({
   selector: 'app-portfolio-manager',
@@ -21,11 +21,16 @@ export class PortfolioManagerComponent implements OnInit {
   isAuthenticated = signal(false);
   isBusy = signal(false);
   isConfigured: boolean;
-  activeTab = signal<'projects' | 'experience' | 'services' | 'technologies'>('projects');
+  activeTab = signal<'projects' | 'experience' | 'services' | 'technologies' | 'messages'>('projects');
   hasLoadError = signal(false);
   errorMessage = signal('');
   saveMessage = signal('');
   experienceMessage = signal('');
+  contactMessages = signal<ContactMessage[]>([]);
+  inboxError = signal('');
+  replyingTo = signal<string | null>(null);
+  replyDraft = '';
+  isSendingReply = signal(false);
   loginEmail = '';
   loginPassword = '';
 
@@ -62,7 +67,9 @@ export class PortfolioManagerComponent implements OnInit {
       this.newProject = this.emptyProject();
       this.newExperience = this.emptyExperience();
       this.newService = this.emptyService();
-      this.isAuthenticated.set(await this.portfolioService.getAdminSession());
+      const hasSession = await this.portfolioService.getAdminSession();
+      this.isAuthenticated.set(hasSession);
+      if (hasSession) await this.refreshInbox();
     } catch (error) {
       this.hasLoadError.set(true);
       this.errorMessage.set(this.errorText(error));
@@ -79,6 +86,7 @@ export class PortfolioManagerComponent implements OnInit {
       await this.portfolioService.signIn(this.loginEmail, this.loginPassword);
       this.loginPassword = '';
       this.isAuthenticated.set(true);
+      await this.refreshInbox();
     } catch (error) {
       this.errorMessage.set(this.errorText(error));
     } finally {
@@ -93,6 +101,71 @@ export class PortfolioManagerComponent implements OnInit {
     } catch (error) {
       this.errorMessage.set(this.errorText(error));
     }
+  }
+
+  async refreshInbox(): Promise<void> {
+    this.inboxError.set('');
+    try {
+      this.contactMessages.set(await this.portfolioService.loadContactMessages());
+    } catch (error) {
+      this.inboxError.set(this.errorText(error));
+    }
+  }
+
+  async markMessageRead(message: ContactMessage): Promise<void> {
+    if (message.is_read) return;
+    this.contactMessages.update((messages) =>
+      messages.map((item) => item.id === message.id ? { ...item, is_read: true } : item)
+    );
+    try {
+      await this.portfolioService.markContactMessageRead(message.id);
+    } catch (error) {
+      this.inboxError.set(this.errorText(error));
+      await this.refreshInbox();
+    }
+  }
+
+  startReply(message: ContactMessage): void {
+    this.replyingTo.set(message.id);
+    this.replyDraft = '';
+    void this.markMessageRead(message);
+  }
+
+  cancelReply(): void {
+    this.replyingTo.set(null);
+    this.replyDraft = '';
+  }
+
+  async sendReply(message: ContactMessage): Promise<void> {
+    const body = this.replyDraft.trim();
+    if (!body || this.isSendingReply()) return;
+
+    this.isSendingReply.set(true);
+    this.inboxError.set('');
+    try {
+      await this.portfolioService.replyToContactMessage(message.id, body);
+      this.cancelReply();
+      await this.refreshInbox();
+    } catch (error) {
+      this.inboxError.set(this.errorText(error));
+      if (this.errorText(error).startsWith('Reply saved,')) await this.refreshInbox();
+    } finally {
+      this.isSendingReply.set(false);
+    }
+  }
+
+  async retryReplyEmail(reply: ContactReply): Promise<void> {
+    this.inboxError.set('');
+    try {
+      await this.portfolioService.retryContactReplyEmail(reply.id);
+      await this.refreshInbox();
+    } catch (error) {
+      this.inboxError.set(this.errorText(error));
+    }
+  }
+
+  unreadMessageCount(): number {
+    return this.contactMessages().filter((message) => !message.is_read).length;
   }
 
   async save(): Promise<void> {
@@ -194,4 +267,5 @@ export class PortfolioManagerComponent implements OnInit {
   private errorText(error: unknown): string {
     return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
   }
+
 }

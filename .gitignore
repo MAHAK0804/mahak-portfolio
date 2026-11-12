@@ -39,6 +39,16 @@ testem.log
 /typings
 __screenshots__/
 
+# Android app build output and local machine configuration
+/android-app/.gradle/
+/android-app/local.properties
+/android-app/**/build/
+/android-app/*.p12
+/android-app/*.jks
+/android-app/*.keystore
+/android-app/app/google-services.json
+/supabase/functions/.env
+
 # System files
 .DS_Store
 Thumbs.db

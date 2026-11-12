@@ -92,6 +92,28 @@
   box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
 }
 
+.submit-btn:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.contact-status {
+  margin-bottom: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.contact-success { color: var(--mint); }
+.contact-error { color: var(--coral); }
+
+.website-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .contact-info {
   color: white;
   animation: formFloat 7s -2s ease-in-out infinite;

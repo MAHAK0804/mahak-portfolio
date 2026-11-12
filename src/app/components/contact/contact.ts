@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PortfolioService } from '../../services/portfolio';
 
 @Component({
   selector: 'app-contact',
@@ -14,14 +15,35 @@ export class ContactComponent {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
+    website: ''
   };
+  isSending = false;
+  successMessage = '';
+  errorMessage = '';
 
-  submitForm() {
-    if (this.formData.name && this.formData.email && this.formData.message) {
-      const mailtoLink = `mailto:mahaksde@gmail.com?subject=${encodeURIComponent(this.formData.subject)}&body=${encodeURIComponent(`Name: ${this.formData.name}\nEmail: ${this.formData.email}\n\n${this.formData.message}`)}`;
-      window.location.href = mailtoLink;
+  constructor(private portfolioService: PortfolioService) {}
+
+  async submitForm(): Promise<void> {
+    if (this.isSending) return;
+    this.isSending = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    try {
+      await this.portfolioService.submitContactMessage({
+        fullName: this.formData.name.trim(),
+        email: this.formData.email.trim(),
+        subject: this.formData.subject.trim(),
+        message: this.formData.message.trim(),
+        website: this.formData.website
+      });
       this.resetForm();
+      this.successMessage = 'Thanks for reaching out. Your message has been sent.';
+    } catch (error) {
+      this.errorMessage = error instanceof Error ? error.message : 'Your message could not be sent. Please try again.';
+    } finally {
+      this.isSending = false;
     }
   }
 
@@ -30,7 +52,8 @@ export class ContactComponent {
       name: '',
       email: '',
       subject: '',
-      message: ''
+      message: '',
+      website: ''
     };
   }
 }

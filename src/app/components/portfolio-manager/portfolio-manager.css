@@ -138,6 +138,23 @@ input:focus, textarea:focus { outline: 2px solid var(--mint); outline-offset: 1p
 .field-hint { color: #737d80; font-size: .72rem; margin-left: .35rem; }
 .add-button { margin-top: .15rem; color: var(--mint); }
 
+.message-record {
+  padding: 1.15rem;
+  background: rgba(15, 20, 25, .62);
+  border: 1px solid rgba(153, 246, 207, .18);
+}
+.message-header { display: flex; justify-content: space-between; gap: 1rem; }
+.message-header h4 { color: var(--paper); font-size: 1.05rem; }
+.message-header p, .message-header time, .message-replies > p:first-child { color: var(--muted); font-size: .84rem; }
+.message-header a { color: var(--mint); overflow-wrap: anywhere; }
+.message-unread { height: max-content; color: var(--ink); background: var(--mint); padding: .15rem .5rem; font-size: .72rem; font-weight: 700; }
+.message-body { margin-top: .75rem; color: var(--paper); white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .55rem; margin-top: .9rem; }
+.message-replies { margin-top: 1rem; padding: .8rem; border-left: 2px solid var(--mint); background: rgba(27, 35, 38, .78); }
+.reply-delivery { margin-top: .4rem; color: var(--mint); font-size: .8rem; }
+.reply-form { margin-top: .9rem; padding-top: .8rem; border-top: 1px solid rgba(153, 246, 207, .14); }
+.inbox-empty { color: var(--muted); padding: 1rem 0; }
+
 @media (max-width: 760px) {
   .manager-section { padding: 5rem 1rem; }
   .manager-heading { display: block; }

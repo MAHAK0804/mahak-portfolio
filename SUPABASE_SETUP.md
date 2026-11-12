@@ -54,3 +54,47 @@ create policy "Only owner can update portfolio content"
 5. Rebuild and deploy the app. Sign in at `/manage`. The first successful save creates the shared row; subsequent visits from any device load that row for the portfolio.
 
 The anon key is intended for browser use. Row-level security is what protects writes, so keep the owner UUID consistent in the app config and both SQL policies. Do not remove the owner check or expose a service-role key.
+
+## Contact inbox and email replies
+
+The contact form saves visitor messages in a private inbox. The web and Android managers load messages when the Inbox is refreshed. Replies are stored in the inbox and sent to the visitor by email through Resend.
+
+### Deploy the inbox database and Edge Functions
+
+The migration and functions live in `supabase/`. Use the Supabase CLI from the repository root and link it to the same project as `src/app/services/supabase.config.ts`:
+
+```powershell
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push
+supabase functions deploy contact-message --no-verify-jwt
+supabase functions deploy send-contact-reply
+```
+
+The migration restricts inbox rows, replies, and read state to the configured portfolio owner UUID, and adds an atomic limit of five submissions per IP per hour. Change the owner UUID in the migration policies if it differs from `SUPABASE_ADMIN_USER_ID`.
+
+### Configure email secrets
+
+Verify a sender domain in [Resend](https://resend.com/), then create an API key.
+
+Create `supabase/functions/.env` locally (it is Git-ignored) with the following values:
+
+```dotenv
+SUPABASE_ADMIN_USER_ID=your-owner-user-uuid
+SUPABASE_ANON_KEY=your-public-anon-or-publishable-key
+ALLOWED_ORIGINS=https://your-portfolio-domain.example,http://localhost:4200
+CONTACT_RATE_LIMIT_SALT=replace-with-a-random-secret-at-least-32-characters
+RESEND_API_KEY=re_your_resend_key
+EMAIL_FROM="Mahak Portfolio <notifications@your-verified-domain.example>"
+OWNER_EMAIL=your-reply-address@example.com
+```
+
+Deploy these values as Supabase Edge Function secrets (do not commit the `.env` file):
+
+```powershell
+supabase secrets set --env-file supabase/functions/.env --project-ref YOUR_PROJECT_REF
+```
+
+`ALLOWED_ORIGINS` must contain the exact website origins, comma-separated, with no trailing slash. Include your deployed website and local development URL. The contact endpoint validates inputs, checks a hidden spam field, and rate-limits submissions. The server-side service-role key is provided by Supabase and must never be added to client code.
+
+New messages appear in the web and Android inbox after refreshing. If Resend setup is missing, messages remain stored in the inbox; email delivery errors are recorded in Supabase Function logs.
