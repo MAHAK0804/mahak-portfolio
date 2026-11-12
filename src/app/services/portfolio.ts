@@ -414,32 +414,17 @@ export class PortfolioService {
     if (error) throw error;
   }
 
-  async replyToContactMessage(messageId: string, body: string): Promise<void> {
+  async saveContactReply(messageId: string, body: string): Promise<ContactReply> {
     const client = await this.getClient();
     await this.requireAdminUser(client);
 
     const { data, error } = await client
       .from('contact_message_replies')
       .insert({ message_id: messageId, body: body.trim() })
-      .select('id')
+      .select('id, body, created_at, email_sent_at')
       .single();
     if (error) throw error;
-
-    const { error: sendError } = await client.functions.invoke('send-contact-reply', {
-      body: { replyId: data.id }
-    });
-    if (sendError) {
-      throw new Error(`Reply saved, but its email could not be sent: ${sendError.message}`);
-    }
-  }
-
-  async retryContactReplyEmail(replyId: string): Promise<void> {
-    const client = await this.getClient();
-    await this.requireAdminUser(client);
-    const { error } = await client.functions.invoke('send-contact-reply', {
-      body: { replyId }
-    });
-    if (error) throw error;
+    return data as ContactReply;
   }
 
   private async requireAdminUser(client: SupabaseClient): Promise<void> {

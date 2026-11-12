@@ -34,7 +34,7 @@ The app loads and saves the shared `portfolio_content` row. It asks for owner si
 
 ## Contact inbox and replies
 
-The Android manager includes an Inbox tab for visitor messages and email replies. Deploy the contact inbox migration and Supabase Edge Functions, then configure the Resend email secrets as described in [`../SUPABASE_SETUP.md`](../SUPABASE_SETUP.md). Refresh the inbox to check for new messages.
+The Android manager includes an Inbox tab for visitor messages and email replies. Deploy the contact inbox migration and contact-message Edge Function as described in [`../SUPABASE_SETUP.md`](../SUPABASE_SETUP.md). Replies are saved to the inbox and opened in the device's email app for manual sending; no email provider configuration is required.
 
 ## Release APK
 

@@ -1,5 +1,8 @@
 package com.mahak.portfoliomanager
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -49,6 +52,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -104,6 +108,7 @@ private data class EditorField(
 @Composable
 private fun PortfolioManagerApp(repository: SupabaseRepository) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var isAuthenticated by remember { mutableStateOf(false) }
     var content by remember { mutableStateOf(PortfolioContent.defaults()) }
@@ -120,6 +125,20 @@ private fun PortfolioManagerApp(repository: SupabaseRepository) {
     var pendingDeleteTitle by remember { mutableStateOf("") }
     var replyingToMessageId by remember { mutableStateOf<String?>(null) }
     var replyDraft by remember { mutableStateOf("") }
+
+    fun openEmailDraft(message: ContactMessage, body: String): Boolean {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.fromParts("mailto", message.email, null)
+            putExtra(Intent.EXTRA_SUBJECT, "Re: ${message.subject.ifBlank { "Your portfolio message" }}")
+            putExtra(Intent.EXTRA_TEXT, body)
+        }
+        return try {
+            context.startActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
+    }
 
     fun launchSave(updatedContent: PortfolioContent, successMessage: String = "Changes saved and published.") {
         if (!isAuthenticated) return
@@ -225,50 +244,34 @@ private fun PortfolioManagerApp(repository: SupabaseRepository) {
                         isBusy = true
                         errorMessage = null
                         try {
-                            repository.sendContactReply(message.id, body)
+                            val savedReply = repository.saveContactReply(message.id, body)
+                            messages = messages.map {
+                                if (it.id == message.id) it.copy(replies = it.replies + savedReply) else it
+                            }
                             replyDraft = ""
                             replyingToMessageId = null
-                            messages = repository.loadContactMessages()
-                            snackbarHostState.showSnackbar("Reply emailed to ${message.email}.")
+                            if (openEmailDraft(message, body)) {
+                                snackbarHostState.showSnackbar("Email app opened. Review the draft and press Send to deliver your reply.")
+                            } else {
+                                val messageText = "Reply saved, but no email app is available on this device."
+                                errorMessage = messageText
+                                snackbarHostState.showSnackbar(messageText)
+                            }
                         } catch (error: Exception) {
-                            val failureMessage = error.message ?: "Could not send the reply."
-                            errorMessage = failureMessage
-                            if (error is ContactReplyEmailException) {
-                                replyDraft = ""
-                                replyingToMessageId = null
-                            }
-                            try {
-                                messages = repository.loadContactMessages()
-                            } catch (refreshError: Exception) {
-                                errorMessage = "${errorMessage}; inbox refresh failed: ${refreshError.message ?: "unknown error"}"
-                            }
-                            snackbarHostState.showSnackbar(
-                                if (error is ContactReplyEmailException) {
-                                    "Reply saved, but its email could not be sent. Use Retry sending email in the inbox."
-                                } else {
-                                    failureMessage
-                                }
-                            )
+                            errorMessage = error.message ?: "Could not save the reply."
                         } finally {
                             isBusy = false
                         }
                     }
                 }
             },
-            onRetryReplyEmail = { reply ->
-                scope.launch {
-                    isBusy = true
-                    errorMessage = null
-                    try {
-                        repository.retryContactReplyEmail(reply.id)
-                        messages = repository.loadContactMessages()
-                        snackbarHostState.showSnackbar("Reply email sent.")
-                    } catch (error: Exception) {
-                        errorMessage = error.message ?: "Could not send the reply email."
-                        snackbarHostState.showSnackbar(errorMessage ?: "Could not send the reply email.")
-                    } finally {
-                        isBusy = false
+            onRetryReplyEmail = { message, reply ->
+                if (openEmailDraft(message, reply.body)) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Email app opened. Review the draft and press Send to deliver your reply.")
                     }
+                } else {
+                    errorMessage = "No email app is available on this device."
                 }
             },
             replyingToMessageId = replyingToMessageId,
@@ -467,7 +470,7 @@ private fun ManagerScreen(
     onRefreshMessages: () -> Unit,
     onMarkMessageRead: (ContactMessage) -> Unit,
     onSendReply: (ContactMessage) -> Unit,
-    onRetryReplyEmail: (ContactMessageReply) -> Unit,
+    onRetryReplyEmail: (ContactMessage, ContactMessageReply) -> Unit,
     onReplyDraftChange: (String) -> Unit,
     onStartReply: (ContactMessage) -> Unit,
     onCancelReply: () -> Unit,

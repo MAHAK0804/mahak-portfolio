@@ -59,7 +59,7 @@ The anon key is intended for browser use. Row-level security is what protects wr
 
 Visitors can send messages through the portfolio contact form. Each message is saved to a private inbox that only the portfolio owner can access from the web or Android manager. The inbox does not send push notifications or update automatically; open the Inbox tab and select **Refresh inbox** to check for new messages.
 
-You can reply to a visitor from either manager. Replies are saved with the original message and emailed to the visitor through Resend.
+You can reply to visitors from either manager. The reply is saved in the inbox and opened as a draft in the device's default email app, addressed to the visitor. Press **Send** in that app to deliver it. The manager cannot confirm whether you sent the draft.
 
 ### Deploy the inbox database and Edge Functions
 
@@ -70,24 +70,15 @@ npx supabase login
 npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase db push --remote
 npx supabase functions deploy contact-message --no-verify-jwt
-npx supabase functions deploy send-contact-reply
 ```
 
 The `--remote` flag applies migrations to the linked Supabase project instead of connecting to a local Supabase stack. Confirm the displayed project reference before accepting the migration prompt.
 
 The migration restricts inbox rows, replies, and read state to the configured portfolio owner UUID, and adds an atomic limit of five submissions per IP per hour. Change the owner UUID in the migration policies if it differs from `ADMIN_USER_ID`.
 
-### Configure email secrets
+### Email replies
 
-Verify a sender domain in [Resend](https://resend.com/), then create an API key.
-
-The local, Git-ignored `supabase/functions/.env` is set up with the owner ID, public Supabase key, wildcard origin (`ALLOWED_ORIGINS=*`), and a generated rate-limit salt. The wildcard permits browser requests from any website. For tighter access, replace `*` with the exact comma-separated website origins. Add your Resend API key, verified sender, and reply address to enable email replies:
-
-```dotenv
-RESEND_API_KEY=re_your_resend_key
-EMAIL_FROM="Mahak Portfolio <notifications@your-verified-domain.example>"
-OWNER_EMAIL=your-reply-address@example.com
-```
+No email provider, API key, or verified domain is needed. When you select **Save and open email app**, the manager saves the reply to the conversation and opens a prefilled draft in the device's configured email app. Review and send it there. The inbox cannot track whether a manually opened draft was sent.
 
 Supabase automatically provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to deployed Edge Functions. The functions also accept a custom `SERVICE_ROLE_KEY` secret if you have already added it. Never expose the service-role key in frontend code. For local function testing, Supabase CLI supplies its local service-role key when running:
 
@@ -95,7 +86,7 @@ Supabase automatically provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` t
 npx supabase functions serve --env-file supabase/functions/.env
 ```
 
-After filling in the live website origin and Resend values, deploy the configured variables as Supabase Edge Function secrets:
+The local, Git-ignored `supabase/functions/.env` contains the contact form configuration. Deploy those values as Supabase Edge Function secrets:
 
 ```powershell
 npx supabase secrets set --env-file supabase/functions/.env --project-ref YOUR_PROJECT_REF
@@ -103,4 +94,4 @@ npx supabase secrets set --env-file supabase/functions/.env --project-ref YOUR_P
 
 The contact endpoint validates inputs, checks a hidden spam field, and rate-limits submissions. Wildcard CORS does not authenticate callers; the service-role key must remain server-side.
 
-New messages appear in the web and Android inbox after you refresh it. If Resend is not configured or an email cannot be delivered, the message and reply remain saved in the inbox; check Supabase Function logs for delivery errors.
+New messages appear in the web and Android inbox after you refresh it. If `send-contact-reply` was previously deployed, remove it from **Supabase Dashboard → Edge Functions**; it is no longer used. You may also remove old Gmail or Resend email secrets from the project.

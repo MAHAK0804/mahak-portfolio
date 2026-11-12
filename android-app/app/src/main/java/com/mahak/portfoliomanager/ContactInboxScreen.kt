@@ -38,7 +38,7 @@ fun ContactInboxScreen(
     onRefresh: () -> Unit,
     onMarkRead: (ContactMessage) -> Unit,
     onReply: (ContactMessage) -> Unit,
-    onRetryEmail: (ContactMessageReply) -> Unit,
+    onRetryEmail: (ContactMessage, ContactMessageReply) -> Unit,
     onReplyDraftChange: (String) -> Unit,
     onStartReply: (ContactMessage) -> Unit,
     onCancelReply: () -> Unit
@@ -102,11 +102,11 @@ fun ContactInboxScreen(
                         Spacer(Modifier.height(4.dp))
                         Text(reply.body, color = InboxPaper)
                         if (reply.emailSentAt == null) {
-                            Text("Email not sent", color = InboxCoral, style = MaterialTheme.typography.labelSmall)
+                            Text("Email delivery is not tracked", color = InboxCoral, style = MaterialTheme.typography.labelSmall)
                             TextButton(
-                                onClick = { onRetryEmail(reply) },
+                                onClick = { onRetryEmail(message, reply) },
                                 enabled = !isBusy
-                            ) { Text("Retry sending email") }
+                            ) { Text("Open saved reply in email app") }
                         } else {
                             Text("Email sent", color = InboxMuted, style = MaterialTheme.typography.labelSmall)
                         }
@@ -134,7 +134,7 @@ fun ContactInboxScreen(
                             label = { Text("Email reply") },
                             minLines = 3,
                             maxLines = 7,
-                            supportingText = { Text("The reply is saved in this conversation and emailed to the visitor.") }
+                            supportingText = { Text("The reply is saved here and opened in your email app. Press Send there to deliver it.") }
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -148,7 +148,7 @@ fun ContactInboxScreen(
                                 if (isBusy) CircularProgressIndicator(
                                     modifier = Modifier.height(18.dp),
                                     strokeWidth = 2.dp
-                                ) else Text("Send email")
+                                ) else Text("Save and open email app")
                             }
                         }
                     }

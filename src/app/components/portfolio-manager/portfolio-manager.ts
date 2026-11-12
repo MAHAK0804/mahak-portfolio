@@ -28,6 +28,7 @@ export class PortfolioManagerComponent implements OnInit {
   experienceMessage = signal('');
   contactMessages = signal<ContactMessage[]>([]);
   inboxError = signal('');
+  inboxNotice = signal('');
   replyingTo = signal<string | null>(null);
   replyDraft = '';
   isSendingReply = signal(false);
@@ -142,26 +143,32 @@ export class PortfolioManagerComponent implements OnInit {
 
     this.isSendingReply.set(true);
     this.inboxError.set('');
+    this.inboxNotice.set('');
     try {
-      await this.portfolioService.replyToContactMessage(message.id, body);
+      const reply = await this.portfolioService.saveContactReply(message.id, body);
+      this.contactMessages.update((messages) =>
+        messages.map((item) => item.id === message.id
+          ? { ...item, contact_message_replies: [...item.contact_message_replies, reply] }
+          : item)
+      );
       this.cancelReply();
-      await this.refreshInbox();
+      this.openEmailDraft(message, body);
     } catch (error) {
       this.inboxError.set(this.errorText(error));
-      if (this.errorText(error).startsWith('Reply saved,')) await this.refreshInbox();
     } finally {
       this.isSendingReply.set(false);
     }
   }
 
-  async retryReplyEmail(reply: ContactReply): Promise<void> {
-    this.inboxError.set('');
-    try {
-      await this.portfolioService.retryContactReplyEmail(reply.id);
-      await this.refreshInbox();
-    } catch (error) {
-      this.inboxError.set(this.errorText(error));
-    }
+  openSavedReply(message: ContactMessage, reply: ContactReply): void {
+    this.openEmailDraft(message, reply.body);
+  }
+
+  private openEmailDraft(message: ContactMessage, body: string): void {
+    const subject = `Re: ${message.subject || 'Your portfolio message'}`;
+    const mailto = `mailto:${message.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    this.inboxNotice.set('Your email app should open with a draft. Review it and press Send to deliver your reply.');
+    window.location.href = mailto;
   }
 
   unreadMessageCount(): number {

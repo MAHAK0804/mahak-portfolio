@@ -27,8 +27,6 @@ data class ContactMessage(
     val replies: List<ContactMessageReply>
 )
 
-class ContactReplyEmailException(message: String, cause: Throwable) : IllegalStateException(message, cause)
-
 private data class AuthSession(
     val accessToken: String,
     val refreshToken: String,
@@ -155,29 +153,23 @@ class SupabaseRepository(
         )
     }
 
-    suspend fun sendContactReply(messageId: String, body: String) = withContext(Dispatchers.IO) {
+    suspend fun saveContactReply(messageId: String, body: String): ContactMessageReply = withContext(Dispatchers.IO) {
         require(body.isNotBlank()) { "Write a reply before sending." }
-        val token = currentAccessToken()
         val response = request(
             method = "POST",
             path = "/rest/v1/contact_message_replies",
-            token = token,
+            token = currentAccessToken(),
             body = JSONObject().put("message_id", messageId).put("body", body.trim()),
             prefer = "return=representation"
         )
-        val replyId = JSONArray(response).getJSONObject(0).getString("id")
-        try {
-            sendContactReplyEmail(token, replyId)
-        } catch (error: Exception) {
-            throw ContactReplyEmailException(
-                "Reply saved in the inbox, but its email could not be sent: ${error.message}",
-                error
+        JSONArray(response).getJSONObject(0).let { reply ->
+            ContactMessageReply(
+                id = reply.getString("id"),
+                body = reply.getString("body"),
+                createdAt = reply.getString("created_at"),
+                emailSentAt = if (reply.isNull("email_sent_at")) null else reply.getString("email_sent_at")
             )
         }
-    }
-
-    suspend fun retryContactReplyEmail(replyId: String) = withContext(Dispatchers.IO) {
-        sendContactReplyEmail(currentAccessToken(), replyId)
     }
 
     suspend fun signOut() = withContext(Dispatchers.IO) {
@@ -216,15 +208,6 @@ class SupabaseRepository(
         check(isConfigured) {
             "Configure SUPABASE_URL, ANON_KEY, and ADMIN_USER_ID in android-app/local.properties."
         }
-    }
-
-    private fun sendContactReplyEmail(token: String, replyId: String) {
-        request(
-            method = "POST",
-            path = "/functions/v1/send-contact-reply",
-            token = token,
-            body = JSONObject().put("replyId", replyId)
-        )
     }
 
     private fun request(

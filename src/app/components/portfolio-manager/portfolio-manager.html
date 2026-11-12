@@ -144,6 +144,7 @@
           <button class="manager-button" type="button" (click)="refreshInbox()">Refresh inbox</button>
         </div>
         <p class="manager-error" *ngIf="inboxError()" role="alert">{{ inboxError() }}</p>
+        <p class="saved-message" *ngIf="inboxNotice()" role="status">{{ inboxNotice() }}</p>
         <p class="inbox-empty" *ngIf="!contactMessages().length && !inboxError()">No visitor messages yet.</p>
         <div class="record-list">
           <article class="message-record" *ngFor="let message of contactMessages()">
@@ -160,7 +161,8 @@
               <p><strong>Your reply</strong> · {{ reply.created_at | date:'medium' }}</p>
               <p class="message-body">{{ reply.body }}</p>
               <p class="reply-delivery" *ngIf="reply.email_sent_at">Email sent {{ reply.email_sent_at | date:'short' }}</p>
-              <button class="add-button" type="button" *ngIf="!reply.email_sent_at" (click)="retryReplyEmail(reply)">Retry sending email</button>
+              <p class="reply-delivery" *ngIf="!reply.email_sent_at">Email delivery is not tracked. Send the draft in your email app.</p>
+              <button class="add-button" type="button" *ngIf="!reply.email_sent_at" (click)="openSavedReply(message, reply)">Open reply in email app</button>
             </div>
             <div class="message-actions">
               <button class="manager-button" type="button" *ngIf="!message.is_read" (click)="markMessageRead(message)">Mark as read</button>
@@ -171,7 +173,7 @@
               <div class="message-actions">
                 <button class="manager-button" type="button" (click)="cancelReply()">Cancel</button>
                 <button class="manager-button manager-button-primary" type="submit" [disabled]="isSendingReply() || !replyDraft.trim()">
-                  {{ isSendingReply() ? 'Sending...' : 'Send reply by email' }}
+                  {{ isSendingReply() ? 'Saving...' : 'Save and open email app' }}
                 </button>
               </div>
             </form>
